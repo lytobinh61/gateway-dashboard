@@ -2,7 +2,10 @@ const API_BASE = "https://gpt-gateway.lytobinh61.workers.dev";
 let adminKey = localStorage.getItem("adminKey") || "";
 
 async function fetchJSON(url, options = {}) {
-  const res = await fetch(url, { ...options, headers: { "Content-Type": "application/json" } });
+  const res = await fetch(url, {
+    ...options,
+    headers: { "Content-Type": "application/json" },
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -87,18 +90,26 @@ async function addUser() {
   await ensureAdminKey();
   const products = await loadProducts();
   if (!products.length) return;
-  const sel = prompt("Chọn GPT (số hoặc id):");
+
+  const sel = prompt(
+    "Chọn GPT (số hoặc id):\n" +
+      products.map((p, i) => `${i + 1}) ${p.name} (${p.id})`).join("\n")
+  );
   const product = isNaN(sel) ? sel : products[parseInt(sel) - 1]?.id;
+  if (!product) return alert("Lựa chọn không hợp lệ.");
+
   const user = prompt("Nhập tên user:");
   const activationCode = prompt("Nhập mã kích hoạt (tuỳ chọn):") || null;
-  if (!product || !user) return;
+  if (!user) return alert("Thiếu tên user.");
   if (!confirm(`Thêm user "${user}" cho GPT "${product}"?`)) return;
+
   try {
     await fetchJSON(`${API_BASE}/user`, {
       method: "POST",
       body: JSON.stringify({ adminKey, product, user, activationCode }),
     });
-    alert(`✅ Đã thêm user: ${user}`);
+    const users = await fetchJSON(`${API_BASE}/users?product=${product}`);
+    alert(`✅ Đã thêm user "${user}" thành công.\n\nTổng số user hiện có: ${users.users.length}`);
   } catch (e) {
     alert("❌ Lỗi khi thêm user.");
   }
@@ -109,24 +120,32 @@ async function deleteUser() {
   await ensureAdminKey();
   const products = await loadProducts();
   if (!products.length) return;
-  const sel = prompt("Chọn GPT (số hoặc id):");
+
+  const sel = prompt(
+    "Chọn GPT (số hoặc id):\n" +
+      products.map((p, i) => `${i + 1}) ${p.name} (${p.id})`).join("\n")
+  );
   const product = isNaN(sel) ? sel : products[parseInt(sel) - 1]?.id;
-  if (!product) return;
+  if (!product) return alert("Lựa chọn không hợp lệ.");
+
   const users = await fetchJSON(`${API_BASE}/users?product=${product}`);
   if (!users.users?.length) return alert("Không có user nào.");
+
   const selUser = prompt(
     "Chọn user cần xoá:\n" +
       users.users.map((u, i) => `${i + 1}) ${u.user}`).join("\n")
   );
   const user = isNaN(selUser) ? selUser : users.users[parseInt(selUser) - 1]?.user;
-  if (!user) return;
+  if (!user) return alert("Không hợp lệ.");
   if (!confirm(`Xoá user "${user}" khỏi GPT "${product}"?`)) return;
+
   try {
     await fetchJSON(`${API_BASE}/user`, {
       method: "DELETE",
       body: JSON.stringify({ adminKey, product, user }),
     });
-    alert(`✅ Đã xoá user: ${user}`);
+    const refreshed = await fetchJSON(`${API_BASE}/users?product=${product}`);
+    alert(`✅ Đã xoá user "${user}".\n\nCòn lại: ${refreshed.users.length} user.`);
   } catch (e) {
     alert("❌ Lỗi xoá user.");
   }
@@ -137,24 +156,38 @@ async function renewUser() {
   await ensureAdminKey();
   const products = await loadProducts();
   if (!products.length) return;
-  const sel = prompt("Chọn GPT (số hoặc id):");
+
+  const sel = prompt(
+    "Chọn GPT cần gia hạn (số hoặc id):\n" +
+      products.map((p, i) => `${i + 1}) ${p.name} (${p.id})`).join("\n")
+  );
   const product = isNaN(sel) ? sel : products[parseInt(sel) - 1]?.id;
-  if (!product) return;
+  if (!product) return alert("Lựa chọn không hợp lệ.");
+
   const users = await fetchJSON(`${API_BASE}/users?product=${product}`);
   if (!users.users?.length) return alert("Không có user nào.");
+
   const selUser = prompt(
     "Chọn user cần gia hạn:\n" +
       users.users.map((u, i) => `${i + 1}) ${u.user}`).join("\n")
   );
   const user = isNaN(selUser) ? selUser : users.users[parseInt(selUser) - 1]?.user;
-  if (!user) return;
-  if (!confirm(`Gia hạn cho user "${user}" trong GPT "${product}"?`)) return;
+  if (!user) return alert("Không hợp lệ.");
+  if (!confirm(`Gia hạn quyền cho user "${user}" trong GPT "${product}"?`)) return;
+
   try {
     const data = await fetchJSON(`${API_BASE}/renew`, {
       method: "POST",
       body: JSON.stringify({ product, user }),
     });
-    alert(`✅ Gia hạn thành công cho ${user}\n\nMã: ${data.code}\nThời hạn: ${data.trialDays} ngày\nThiết bị: ${data.slots}\nGateway: ${data.gateway}`);
+    alert(
+      `✅ Gia hạn thành công!\n\n` +
+        `👤 User: ${data.user}\n` +
+        `🔑 Mã mới: ${data.code}\n` +
+        `⏱️ Thời hạn: ${data.trialDays} ngày\n` +
+        `💻 Thiết bị: ${data.slots}\n` +
+        `🌐 Gateway: ${data.gateway}`
+    );
   } catch (e) {
     alert("❌ Lỗi khi gia hạn user.");
   }
