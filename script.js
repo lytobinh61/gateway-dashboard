@@ -15,7 +15,7 @@ document.getElementById("delUser").onclick = delUser;
 // === HIỂN THỊ DANH SÁCH GPT ===
 async function listProducts() {
   try {
-    const res = await fetch(`${API}/listProducts`);
+    const res = await fetch(`${API}/products`);
     const data = await res.json();
     if (!data.products || !data.products.length) {
       output.innerHTML = `<div class="alert alert-info">Chưa có GPT nào.</div>`;
@@ -129,3 +129,4 @@ async function delUser() {
     alert("❌ Lỗi khi xoá user.");
   }
 }
+
