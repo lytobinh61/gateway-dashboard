@@ -152,11 +152,13 @@ async function deleteUser() {
 }
 
 // ====== RENEW USER ======
+// ====== GIA HẠN USER ======
 async function renewUser() {
   await ensureAdminKey();
   const products = await loadProducts();
   if (!products.length) return;
 
+  // 🧩 Chọn GPT cần gia hạn
   const sel = prompt(
     "Chọn GPT cần gia hạn (số hoặc id):\n" +
       products.map((p, i) => `${i + 1}) ${p.name} (${p.id})`).join("\n")
@@ -164,25 +166,40 @@ async function renewUser() {
   const product = isNaN(sel) ? sel : products[parseInt(sel) - 1]?.id;
   if (!product) return alert("Lựa chọn không hợp lệ.");
 
+  // 🧩 Lấy danh sách user
   const users = await fetchJSON(`${API_BASE}/users?product=${product}`);
   if (!users.users?.length) return alert("Không có user nào.");
 
+  // 🧩 Chọn user cần gia hạn
   const selUser = prompt(
     "Chọn user cần gia hạn:\n" +
       users.users.map((u, i) => `${i + 1}) ${u.user}`).join("\n")
   );
-  const user = isNaN(selUser) ? selUser : users.users[parseInt(selUser) - 1]?.user;
+  const user = isNaN(selUser)
+    ? selUser
+    : users.users[parseInt(selUser) - 1]?.user;
   if (!user) return alert("Không hợp lệ.");
-  if (!confirm(`Gia hạn quyền cho user "${user}" trong GPT "${product}"?`)) return;
+
+  // 🕒 Nhập thời hạn & số thiết bị
+  const trialDays = parseInt(prompt("⏱️ Nhập thời hạn (ngày):", "15")) || 15;
+  const slots = parseInt(prompt("💻 Nhập số thiết bị:", "1")) || 1;
+
+  if (
+    !confirm(
+      `Gia hạn quyền cho user "${user}" trong GPT "${product}" với thời hạn ${trialDays} ngày, ${slots} thiết bị?`
+    )
+  )
+    return;
 
   try {
+    // 🔗 Gọi API /renew
     const data = await fetchJSON(`${API_BASE}/renew`, {
       method: "POST",
-      body: JSON.stringify({ product, user }),
+      body: JSON.stringify({ product, user, trialDays, slots }),
     });
 
-    // ✅ Hiển thị trong vùng #output
-    const infoText = 
+    // ✅ Hiển thị kết quả trong giao diện
+    const infoText =
       `👤 User: ${data.user}\n` +
       `🔑 Mã mới: ${data.code}\n` +
       `⏱️ Thời hạn: ${data.trialDays} ngày\n` +
@@ -202,19 +219,21 @@ async function renewUser() {
     `;
     showMessage(html, "light");
 
-    // 📋 Sao chép khi bấm nút
+    // 📋 Nút Sao chép
     setTimeout(() => {
-      document.getElementById("copyRenewInfo")?.addEventListener("click", () => {
-        navigator.clipboard.writeText(infoText).then(() => {
-          alert("✅ Đã sao chép thông tin gia hạn!");
+      document
+        .getElementById("copyRenewInfo")
+        ?.addEventListener("click", () => {
+          navigator.clipboard.writeText(infoText).then(() => {
+            alert("✅ Đã sao chép thông tin gia hạn!");
+          });
         });
-      });
     }, 100);
-
   } catch (e) {
     showMessage("❌ Lỗi khi gia hạn user.", "danger");
   }
 }
+
 
 
 // ====== THEME TOGGLE ======
