@@ -1,38 +1,123 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-bs-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gateway GPT Dashboard</title>
 
-  <!-- Bootstrap CSS -->
+  <!-- Bootstrap -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
 
   <style>
-    body { background: #f8f9fa; padding: 20px; }
-    .btn { margin: 5px; }
-    #output { margin-top: 20px; }
+    body {
+      padding-top: 50px;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h2 {
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .btn-group-custom {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    #output {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--bs-body-bg);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    table th,
+    table td {
+      vertical-align: middle !important;
+    }
+
+    /* Giao diện dark mode mượt */
+    [data-bs-theme="dark"] body {
+      background-color: #121212;
+      color: #e4e4e4;
+    }
+    [data-bs-theme="dark"] #output {
+      background: #1e1e1e;
+      box-shadow: 0 3px 10px rgba(255, 255, 255, 0.05);
+    }
+    [data-bs-theme="dark"] .table {
+      color: #e4e4e4;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <h2 class="mb-4">🧭 Quản trị Gateway GPT</h2>
-    <div class="d-flex flex-wrap gap-2">
-      <button id="addGPT" class="btn btn-success">➕ Thêm GPT</button>
-      <button id="delGPT" class="btn btn-danger">🗑️ Xoá GPT</button>
-      <button id="addUser" class="btn btn-primary">➕ Thêm User</button>
-      <button id="delUser" class="btn btn-warning">🗑️ Xoá User</button>
+    <h2>✨ Quản trị Gateway GPT</h2>
+
+    <div class="btn-group-custom">
+      <button id="addGPT" class="btn btn-success btn-lg shadow-sm">
+        ➕ Thêm GPT
+      </button>
+      <button id="delGPT" class="btn btn-danger btn-lg shadow-sm">
+        🗑️ Xoá GPT
+      </button>
+      <button id="addUser" class="btn btn-primary btn-lg shadow-sm">
+        ➕ Thêm User
+      </button>
+      <button id="delUser" class="btn btn-warning btn-lg shadow-sm">
+        🗑️ Xoá User
+      </button>
     </div>
 
-    <div id="output" class="mt-4"></div>
+    <div id="output" class="text-center">
+      <div class="alert alert-info">Đang tải danh sách GPT...</div>
+    </div>
+
+    <!-- Nút đổi giao diện -->
+    <div class="text-center mt-4">
+      <button id="toggleTheme" class="btn btn-outline-secondary btn-sm">
+        🌙 Chế độ tối / ☀️ Sáng
+      </button>
+    </div>
   </div>
 
-  <!-- Bootstrap JS (optional) -->
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- File JS chính -->
+
+  <!-- Kết nối file JS chính -->
   <script src="./script.js"></script>
+
+  <script>
+    // Tự nhận diện dark mode hệ thống
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+
+    function applyTheme(dark) {
+      root.setAttribute("data-bs-theme", dark ? "dark" : "light");
+    }
+
+    // Khi người dùng đổi theme trong hệ thống
+    prefersDark.addEventListener("change", e => applyTheme(e.matches));
+
+    // Nút chuyển theme thủ công
+    document.getElementById("toggleTheme").onclick = () => {
+      const current = root.getAttribute("data-bs-theme");
+      applyTheme(current === "light");
+    };
+
+    // Áp dụng theme ban đầu
+    applyTheme(prefersDark.matches);
+  </script>
 </body>
 </html>
