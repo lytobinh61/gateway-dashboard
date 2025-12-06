@@ -1,4 +1,4 @@
-const API_BASE = "https://gpt-gateway.lytobinh61.workers.dev";
+kconst API_BASE = "https://gpt-gateway.lytobinh61.workers.dev";
 let adminKey = localStorage.getItem("adminKey") || "";
 
 async function fetchJSON(url, options = {}) {
@@ -250,4 +250,5 @@ document.getElementById("btnDeleteUser").onclick = deleteUser;
 document.getElementById("btnRenewUser").onclick = renewUser;
 
 // ====== AUTO LOAD ======
-loadProducts();
+//loadProducts(); 
+
