@@ -5,16 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quản trị Gateway GPT</title>
 
-    <!-- Bootstrap -->
+    <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
 
-    <!-- ✅ Đặt CSS trong <style> (rất quan trọng) -->
+    <!-- 🎨 CSS tùy chỉnh -->
     <style>
       * {
         transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      body {
+        background-color: #f9f9f9;
+        color: #222;
       }
 
       body.dark-mode {
@@ -69,43 +74,45 @@
       </button>
     </div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const themeToggle = document.getElementById("themeToggle");
-    const body = document.body;
+    <!-- 🌗 Script chuyển sáng / tối hoạt động trên PC & Mobile -->
+    <script>
+      (function () {
+        document.addEventListener("DOMContentLoaded", function () {
+          const body = document.body;
+          const toggleBtn = document.getElementById("themeToggle");
 
-    // ✅ Kiểm tra trạng thái lưu trong localStorage
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      body.classList.add("dark-mode");
-      themeToggle.innerText = "☀️ Chuyển sang chế độ sáng";
-    } else {
-      themeToggle.innerText = "🌙 Chuyển sang chế độ tối";
-    }
+          if (!toggleBtn) return;
 
-    // ✅ Thêm sự kiện click (tương thích cả mobile)
-    themeToggle.addEventListener("click", function (e) {
-      e.preventDefault();
-      body.classList.toggle("dark-mode");
+          // Lấy trạng thái lưu
+          const savedTheme = localStorage.getItem("theme") || "light";
+          applyTheme(savedTheme);
 
-      const isDark = body.classList.contains("dark-mode");
-      themeToggle.innerText = isDark
-        ? "☀️ Chuyển sang chế độ sáng"
-        : "🌙 Chuyển sang chế độ tối";
+          // Gắn sự kiện click & touchend cho tương thích
+          ["click", "touchend"].forEach((evt) => {
+            toggleBtn.addEventListener(evt, (e) => {
+              e.preventDefault();
+              const current = body.classList.contains("dark-mode") ? "dark" : "light";
+              const next = current === "dark" ? "light" : "dark";
+              applyTheme(next);
+              localStorage.setItem("theme", next);
+            });
+          });
 
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-    });
+          // Hàm thực thi thay đổi theme
+          function applyTheme(mode) {
+            if (mode === "dark") {
+              body.classList.add("dark-mode");
+              toggleBtn.innerText = "☀️ Chuyển sang chế độ sáng";
+            } else {
+              body.classList.remove("dark-mode");
+              toggleBtn.innerText = "🌙 Chuyển sang chế độ tối";
+            }
+          }
+        });
+      })();
+    </script>
 
-    // ✅ Cho phép thao tác trên mobile (chống chặn tap event)
-    themeToggle.addEventListener("touchstart", function (e) {
-      e.preventDefault();
-      themeToggle.click();
-    });
-  });
-</script>
-
-
+    <!-- Script xử lý chính -->
     <script src="script.js"></script>
   </body>
 </html>
-
