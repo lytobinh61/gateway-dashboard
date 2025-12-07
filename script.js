@@ -31,10 +31,6 @@ function printResult(data) {
 }
 
 // ===== API mô phỏng =====
-async function mockApi(endpoint, method, body) {
-  await new Promise(r => setTimeout(r, 600));
-  return { success: true, endpoint, method, body, time: new Date().toLocaleTimeString() };
-}
 
 // ===== TODO: chèn fetch thật tại đây =====
 // Ví dụ:
@@ -53,8 +49,11 @@ async function callApi(endpoint, method, body) {
   const options = { method, headers: { "Content-Type": "application/json" } };
   if (method !== "GET") options.body = JSON.stringify(body);
   const res = await fetch(url, options);
-  return await res.json();
+  const data = await res.json();
+  console.log("API response:", data);
+  return data;
 }
+
 
 //const callApi = mockApi; // <- tạm dùng mô phỏng
 
@@ -159,4 +158,5 @@ document.getElementById("btnRenewUser").onclick = async () => {
 
 // ===== Mặc định =====
 printResult("✨ Sẵn sàng. Nhập adminKey để bắt đầu thao tác.");
+
 
