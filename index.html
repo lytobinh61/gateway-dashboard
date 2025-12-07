@@ -12,14 +12,17 @@
   </header>
 
   <main>
+    <!-- Popup nhập adminKey -->
     <div id="adminKeyModal" class="modal active">
       <div class="modal-content">
-        <h2>Nhập adminKey</h2>
+        <h2>🔒 Nhập khóa quản trị (adminKey)</h2>
+        <p>Khóa này chỉ dùng trong phiên hiện tại.</p>
         <input type="password" id="adminKeyInput" placeholder="Nhập adminKey..." />
         <button id="confirmAdminKey">Xác nhận</button>
       </div>
     </div>
 
+    <!-- Các nút thao tác -->
     <div class="button-grid">
       <button id="btnAddGPT">➕ Thêm GPT</button>
       <button id="btnDeleteGPT">🗑️ Xoá GPT</button>
@@ -28,10 +31,13 @@
       <button id="btnRenewUser">🔁 Gia hạn User</button>
     </div>
 
+    <!-- Vùng hiển thị kết quả -->
     <section id="output" class="output"></section>
   </main>
 
+  <!-- Toast thông báo -->
   <div id="toast" class="toast"></div>
+
   <script src="script.js"></script>
 </body>
 </html>
