@@ -4,53 +4,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quản trị Gateway GPT</title>
-
-    <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
 
-    <!-- 🎨 CSS tùy chỉnh -->
     <style>
+      :root {
+        --bg-light: #f9f9f9;
+        --text-light: #222;
+        --bg-dark: #121212;
+        --text-dark: #f1f1f1;
+      }
+
       * {
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition: background-color 0.25s ease, color 0.25s ease;
       }
 
       body {
-        background-color: #f9f9f9;
-        color: #222;
+        background-color: var(--bg-light);
+        color: var(--text-light);
       }
 
       body.dark-mode {
-        background-color: #121212;
-        color: #f1f1f1;
-      }
-
-      body.dark-mode .btn {
-        filter: brightness(1.1);
-      }
-
-      body.dark-mode .alert {
-        background-color: #222;
-        color: #f1f1f1;
-        border-color: #444;
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
       }
 
       .container {
         max-width: 900px;
-        margin-top: 50px;
+        margin-top: 60px;
         text-align: center;
       }
 
-      #output {
-        margin-top: 20px;
-        min-height: 50px;
-        transition: all 0.3s ease;
+      .btn-lg {
+        min-width: 200px;
       }
 
       #themeToggle {
-        margin-top: 20px;
+        margin-top: 30px;
+      }
+
+      .alert {
+        margin-top: 25px;
+        min-height: 45px;
       }
     </style>
   </head>
@@ -67,52 +64,52 @@
         <button id="btnRenewUser" class="btn btn-info btn-lg">🔄 Gia hạn User</button>
       </div>
 
-      <div id="output" class="alert alert-light border"></div>
+      <div id="output" class="alert alert-light border">Chưa có thao tác...</div>
 
-      <button id="themeToggle" class="btn btn-outline-secondary btn-sm">
+      <button id="themeToggle" class="btn btn-outline-secondary">
         🌙 Chuyển sang chế độ tối
       </button>
     </div>
 
-    <!-- 🌗 Script chuyển sáng / tối hoạt động trên PC & Mobile -->
+    <!-- ✅ JavaScript sáng/tối đơn giản và chắc chắn -->
     <script>
-      (function () {
-        document.addEventListener("DOMContentLoaded", function () {
-          const body = document.body;
-          const toggleBtn = document.getElementById("themeToggle");
+      document.addEventListener("DOMContentLoaded", () => {
+        const toggleBtn = document.getElementById("themeToggle");
+        const body = document.body;
 
-          if (!toggleBtn) return;
+        // Lấy chế độ đã lưu
+        const saved = localStorage.getItem("theme");
+        if (saved === "dark") enableDark();
+        else enableLight();
 
-          // Lấy trạng thái lưu
-          const savedTheme = localStorage.getItem("theme") || "light";
-          applyTheme(savedTheme);
-
-          // Gắn sự kiện click & touchend cho tương thích
-          ["click", "touchend"].forEach((evt) => {
-            toggleBtn.addEventListener(evt, (e) => {
-              e.preventDefault();
-              const current = body.classList.contains("dark-mode") ? "dark" : "light";
-              const next = current === "dark" ? "light" : "dark";
-              applyTheme(next);
-              localStorage.setItem("theme", next);
-            });
-          });
-
-          // Hàm thực thi thay đổi theme
-          function applyTheme(mode) {
-            if (mode === "dark") {
-              body.classList.add("dark-mode");
-              toggleBtn.innerText = "☀️ Chuyển sang chế độ sáng";
+        // Click hoặc chạm trên mobile
+        ["click", "touchend"].forEach((evt) => {
+          toggleBtn.addEventListener(evt, (e) => {
+            e.preventDefault();
+            if (body.classList.contains("dark-mode")) {
+              enableLight();
+              localStorage.setItem("theme", "light");
             } else {
-              body.classList.remove("dark-mode");
-              toggleBtn.innerText = "🌙 Chuyển sang chế độ tối";
+              enableDark();
+              localStorage.setItem("theme", "dark");
             }
-          }
+          });
         });
-      })();
-    </script>
 
-    <!-- Script xử lý chính -->
-    <script src="script.js"></script>
+        function enableDark() {
+          body.classList.add("dark-mode");
+          toggleBtn.innerText = "☀️ Chuyển sang chế độ sáng";
+          document.querySelector("#output").classList.add("alert-dark");
+          document.querySelector("#output").classList.remove("alert-light");
+        }
+
+        function enableLight() {
+          body.classList.remove("dark-mode");
+          toggleBtn.innerText = "🌙 Chuyển sang chế độ tối";
+          document.querySelector("#output").classList.add("alert-light");
+          document.querySelector("#output").classList.remove("alert-dark");
+        }
+      });
+    </script>
   </body>
 </html>
