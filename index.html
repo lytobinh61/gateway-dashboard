@@ -12,14 +12,20 @@
   </header>
 
   <main>
+    <!-- Popup nhập adminKey -->
     <div id="adminKeyModal" class="modal active">
       <div class="modal-content">
         <h2>🔒 Nhập adminKey</h2>
         <input type="password" id="adminKeyInput" placeholder="Nhập adminKey..." />
+        <div class="toggle-key">
+          <input type="checkbox" id="toggleKey" />
+          <label for="toggleKey">Hiển thị adminKey</label>
+        </div>
         <button id="confirmAdminKey">Xác nhận</button>
       </div>
     </div>
 
+    <!-- Vùng thao tác -->
     <div class="button-grid">
       <button class="btn green" id="btnAddGPT">➕ Thêm GPT</button>
       <button class="btn red" id="btnDeleteGPT">🗑️ Xoá GPT</button>
@@ -28,11 +34,14 @@
       <button class="btn cyan" id="btnRenewUser">🔁 Gia hạn User</button>
     </div>
 
+    <!-- Danh sách chọn -->
+    <div id="listContainer" class="list-container"></div>
+
+    <!-- Kết quả -->
     <section id="output" class="output"></section>
   </main>
 
   <div id="toast" class="toast"></div>
-
   <script src="script.js"></script>
 </body>
 </html>
