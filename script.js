@@ -173,7 +173,12 @@ async function renewUser() {
   );
   const user = isNaN(selUser) ? selUser : users.users[parseInt(selUser) - 1]?.user;
   if (!user) return alert("Không hợp lệ.");
-  if (!confirm(`Gia hạn quyền cho user "${user}" trong GPT "${product}"?`)) return;
+
+  // 🕒 Nhập thời hạn tùy chọn (mặc định 15 ngày)
+  const trialDays = parseInt(prompt("Nhập thời hạn (ngày):", "15")) || 15;
+  const slots = 1; // mặc định 1 thiết bị
+
+  if (!confirm(`Gia hạn user "${user}" trong GPT "${product}" với thời hạn ${trialDays} ngày, 1 thiết bị?`)) return;
 
   try {
     const data = await fetchJSON(`${API_BASE}/renew`, {
@@ -181,12 +186,12 @@ async function renewUser() {
       body: JSON.stringify({ product, user }),
     });
 
-    // ✅ Hiển thị trong vùng #output
-    const infoText = 
+    // ✅ Ghi đè hiển thị theo thời hạn + slots nhập
+    const infoText =
       `👤 User: ${data.user}\n` +
       `🔑 Mã mới: ${data.code}\n` +
-      `⏱️ Thời hạn: ${data.trialDays} ngày\n` +
-      `💻 Thiết bị: ${data.slots}\n` +
+      `⏱️ Thời hạn: ${trialDays} ngày\n` +
+      `💻 Thiết bị: ${slots}\n` +
       `🌐 Gateway: ${data.gateway}`;
 
     const html = `
@@ -194,15 +199,15 @@ async function renewUser() {
         <h5>✅ Gia hạn thành công!</h5>
         <p><strong>👤 User:</strong> ${data.user}</p>
         <p><strong>🔑 Mã mới:</strong> ${data.code}</p>
-        <p><strong>⏱️ Thời hạn:</strong> ${data.trialDays} ngày</p>
-        <p><strong>💻 Thiết bị:</strong> ${data.slots}</p>
+        <p><strong>⏱️ Thời hạn:</strong> ${trialDays} ngày</p>
+        <p><strong>💻 Thiết bị:</strong> ${slots}</p>
         <p><strong>🌐 Gateway:</strong> <a href="${data.gateway}" target="_blank">${data.gateway}</a></p>
         <button id="copyRenewInfo" class="btn btn-outline-primary btn-sm">📋 Sao chép</button>
       </div>
     `;
     showMessage(html, "light");
 
-    // 📋 Sao chép khi bấm nút
+    // 📋 Sao chép
     setTimeout(() => {
       document.getElementById("copyRenewInfo")?.addEventListener("click", () => {
         navigator.clipboard.writeText(infoText).then(() => {
@@ -210,7 +215,6 @@ async function renewUser() {
         });
       });
     }, 100);
-
   } catch (e) {
     showMessage("❌ Lỗi khi gia hạn user.", "danger");
   }
@@ -231,4 +235,5 @@ document.getElementById("btnRenewUser").onclick = renewUser;
 
 // ====== AUTO LOAD ======
 loadProducts();
+
 
