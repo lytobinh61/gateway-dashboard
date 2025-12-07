@@ -155,6 +155,9 @@ async function deleteUser() {
 async function renewUser() {
   await ensureAdminKey();
   const products = await loadProducts();
+  const trialDays = parseInt(prompt("⏱️ Nhập thời hạn (ngày):", "15")) || 15;
+const slots = parseInt(prompt("💻 Nhập số thiết bị:", "1")) || 1;
+
   if (!products.length) return;
 
   const sel = prompt(
@@ -183,7 +186,7 @@ async function renewUser() {
   try {
     const data = await fetchJSON(`${API_BASE}/renew`, {
       method: "POST",
-      body: JSON.stringify({ product, user }),
+      body: JSON.stringify({ product, user, trialDays, slots }),
     });
 
     // ✅ Ghi đè hiển thị theo thời hạn + slots nhập
@@ -235,6 +238,7 @@ document.getElementById("btnRenewUser").onclick = renewUser;
 
 // ====== AUTO LOAD ======
 //loadProducts();
+
 
 
 
