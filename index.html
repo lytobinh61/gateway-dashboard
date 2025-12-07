@@ -11,7 +11,7 @@
       rel="stylesheet"
     />
 
-    <!-- ✅ CSS chế độ sáng/tối -->
+    <!-- ✅ Đặt CSS trong <style> (rất quan trọng) -->
     <style>
       * {
         transition: background-color 0.3s ease, color 0.3s ease;
@@ -32,7 +32,6 @@
         border-color: #444;
       }
 
-      /* căn giữa nội dung */
       .container {
         max-width: 900px;
         margin-top: 50px;
@@ -55,7 +54,6 @@
     <div class="container">
       <h1>✨ Quản trị Gateway GPT</h1>
 
-      <!-- Các nút chức năng -->
       <div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
         <button id="btnAddGPT" class="btn btn-success btn-lg">➕ Thêm GPT</button>
         <button id="btnDeleteGPT" class="btn btn-danger btn-lg">🗑️ Xoá GPT</button>
@@ -64,16 +62,36 @@
         <button id="btnRenewUser" class="btn btn-info btn-lg">🔄 Gia hạn User</button>
       </div>
 
-      <!-- Hiển thị kết quả -->
       <div id="output" class="alert alert-light border"></div>
 
-      <!-- Nút chuyển chế độ -->
       <button id="themeToggle" class="btn btn-outline-secondary btn-sm">
         🌙 Chuyển sang chế độ tối
       </button>
     </div>
 
-    <!-- JS chính -->
+    <script>
+      // ✅ Toggle chế độ sáng / tối
+      const themeToggle = document.getElementById("themeToggle");
+      const body = document.body;
+
+      // Khôi phục trạng thái đã lưu
+      if (localStorage.getItem("theme") === "dark") {
+        body.classList.add("dark-mode");
+        themeToggle.innerText = "☀️ Chuyển sang chế độ sáng";
+      }
+
+      themeToggle.addEventListener("click", () => {
+        body.classList.toggle("dark-mode");
+        const isDark = body.classList.contains("dark-mode");
+
+        themeToggle.innerText = isDark
+          ? "☀️ Chuyển sang chế độ sáng"
+          : "🌙 Chuyển sang chế độ tối";
+
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+      });
+    </script>
+
     <script src="script.js"></script>
   </body>
 </html>
