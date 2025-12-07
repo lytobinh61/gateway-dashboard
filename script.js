@@ -180,16 +180,39 @@ async function renewUser() {
       method: "POST",
       body: JSON.stringify({ product, user }),
     });
-    alert(
-      `✅ Gia hạn thành công!\n\n` +
-        `👤 User: ${data.user}\n` +
-        `🔑 Mã mới: ${data.code}\n` +
-        `⏱️ Thời hạn: ${data.trialDays} ngày\n` +
-        `💻 Thiết bị: ${data.slots}\n` +
-        `🌐 Gateway: ${data.gateway}`
-    );
+
+    // ✅ Hiển thị trong vùng #output
+    const infoText = 
+      `👤 User: ${data.user}\n` +
+      `🔑 Mã mới: ${data.code}\n` +
+      `⏱️ Thời hạn: ${data.trialDays} ngày\n` +
+      `💻 Thiết bị: ${data.slots}\n` +
+      `🌐 Gateway: ${data.gateway}`;
+
+    const html = `
+      <div class="alert alert-success">
+        <h5>✅ Gia hạn thành công!</h5>
+        <p><strong>👤 User:</strong> ${data.user}</p>
+        <p><strong>🔑 Mã mới:</strong> ${data.code}</p>
+        <p><strong>⏱️ Thời hạn:</strong> ${data.trialDays} ngày</p>
+        <p><strong>💻 Thiết bị:</strong> ${data.slots}</p>
+        <p><strong>🌐 Gateway:</strong> <a href="${data.gateway}" target="_blank">${data.gateway}</a></p>
+        <button id="copyRenewInfo" class="btn btn-outline-primary btn-sm">📋 Sao chép</button>
+      </div>
+    `;
+    showMessage(html, "light");
+
+    // 📋 Sao chép khi bấm nút
+    setTimeout(() => {
+      document.getElementById("copyRenewInfo")?.addEventListener("click", () => {
+        navigator.clipboard.writeText(infoText).then(() => {
+          alert("✅ Đã sao chép thông tin gia hạn!");
+        });
+      });
+    }, 100);
+
   } catch (e) {
-    alert("❌ Lỗi khi gia hạn user.");
+    showMessage("❌ Lỗi khi gia hạn user.", "danger");
   }
 }
 
@@ -208,3 +231,4 @@ document.getElementById("btnRenewUser").onclick = renewUser;
 
 // ====== AUTO LOAD ======
 loadProducts();
+
