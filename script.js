@@ -152,14 +152,13 @@ async function deleteUser() {
 }
 
 // ====== RENEW USER ======
+// ====== GIA HẠN USER ======
 async function renewUser() {
   await ensureAdminKey();
   const products = await loadProducts();
-  const trialDays = parseInt(prompt("⏱️ Nhập thời hạn (ngày):", "15")) || 15;
-const slots = parseInt(prompt("💻 Nhập số thiết bị:", "1")) || 1;
-
   if (!products.length) return;
 
+  // 🧩 Chọn GPT cần gia hạn
   const sel = prompt(
     "Chọn GPT cần gia hạn (số hoặc id):\n" +
       products.map((p, i) => `${i + 1}) ${p.name} (${p.id})`).join("\n")
@@ -167,34 +166,44 @@ const slots = parseInt(prompt("💻 Nhập số thiết bị:", "1")) || 1;
   const product = isNaN(sel) ? sel : products[parseInt(sel) - 1]?.id;
   if (!product) return alert("Lựa chọn không hợp lệ.");
 
+  // 🧩 Lấy danh sách user
   const users = await fetchJSON(`${API_BASE}/users?product=${product}`);
   if (!users.users?.length) return alert("Không có user nào.");
 
+  // 🧩 Chọn user cần gia hạn
   const selUser = prompt(
     "Chọn user cần gia hạn:\n" +
       users.users.map((u, i) => `${i + 1}) ${u.user}`).join("\n")
   );
-  const user = isNaN(selUser) ? selUser : users.users[parseInt(selUser) - 1]?.user;
+  const user = isNaN(selUser)
+    ? selUser
+    : users.users[parseInt(selUser) - 1]?.user;
   if (!user) return alert("Không hợp lệ.");
 
-  // 🕒 Nhập thời hạn tùy chọn (mặc định 15 ngày)
-  const trialDays = parseInt(prompt("Nhập thời hạn (ngày):", "15")) || 15;
-  const slots = 1; // mặc định 1 thiết bị
+  // 🕒 Nhập thời hạn & số thiết bị
+  const trialDays = parseInt(prompt("⏱️ Nhập thời hạn (ngày):", "15")) || 15;
+  const slots = parseInt(prompt("💻 Nhập số thiết bị:", "1")) || 1;
 
-  if (!confirm(`Gia hạn user "${user}" trong GPT "${product}" với thời hạn ${trialDays} ngày, 1 thiết bị?`)) return;
+  if (
+    !confirm(
+      `Gia hạn quyền cho user "${user}" trong GPT "${product}" với thời hạn ${trialDays} ngày, ${slots} thiết bị?`
+    )
+  )
+    return;
 
   try {
+    // 🔗 Gọi API /renew
     const data = await fetchJSON(`${API_BASE}/renew`, {
       method: "POST",
       body: JSON.stringify({ product, user, trialDays, slots }),
     });
 
-    // ✅ Ghi đè hiển thị theo thời hạn + slots nhập
+    // ✅ Hiển thị kết quả trong giao diện
     const infoText =
       `👤 User: ${data.user}\n` +
       `🔑 Mã mới: ${data.code}\n` +
-      `⏱️ Thời hạn: ${trialDays} ngày\n` +
-      `💻 Thiết bị: ${slots}\n` +
+      `⏱️ Thời hạn: ${data.trialDays} ngày\n` +
+      `💻 Thiết bị: ${data.slots}\n` +
       `🌐 Gateway: ${data.gateway}`;
 
     const html = `
@@ -202,26 +211,29 @@ const slots = parseInt(prompt("💻 Nhập số thiết bị:", "1")) || 1;
         <h5>✅ Gia hạn thành công!</h5>
         <p><strong>👤 User:</strong> ${data.user}</p>
         <p><strong>🔑 Mã mới:</strong> ${data.code}</p>
-        <p><strong>⏱️ Thời hạn:</strong> ${trialDays} ngày</p>
-        <p><strong>💻 Thiết bị:</strong> ${slots}</p>
+        <p><strong>⏱️ Thời hạn:</strong> ${data.trialDays} ngày</p>
+        <p><strong>💻 Thiết bị:</strong> ${data.slots}</p>
         <p><strong>🌐 Gateway:</strong> <a href="${data.gateway}" target="_blank">${data.gateway}</a></p>
         <button id="copyRenewInfo" class="btn btn-outline-primary btn-sm">📋 Sao chép</button>
       </div>
     `;
     showMessage(html, "light");
 
-    // 📋 Sao chép
+    // 📋 Nút Sao chép
     setTimeout(() => {
-      document.getElementById("copyRenewInfo")?.addEventListener("click", () => {
-        navigator.clipboard.writeText(infoText).then(() => {
-          alert("✅ Đã sao chép thông tin gia hạn!");
+      document
+        .getElementById("copyRenewInfo")
+        ?.addEventListener("click", () => {
+          navigator.clipboard.writeText(infoText).then(() => {
+            alert("✅ Đã sao chép thông tin gia hạn!");
+          });
         });
-      });
     }, 100);
   } catch (e) {
     showMessage("❌ Lỗi khi gia hạn user.", "danger");
   }
 }
+
 
 // ====== THEME TOGGLE ======
 document.getElementById("themeToggle").onclick = () => {
@@ -238,6 +250,7 @@ document.getElementById("btnRenewUser").onclick = renewUser;
 
 // ====== AUTO LOAD ======
 //loadProducts();
+
 
 
 
