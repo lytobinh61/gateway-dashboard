@@ -47,12 +47,12 @@ async function mockApi(endpoint, method, body) {
 //   return res.json();
 // }
 
+
 async function callApi(endpoint, method, body) {
-  const res = await fetch(`https://gpt-gateway.lytobinh61.workers.dev/${endpoint}`, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: method === "GET" ? null : JSON.stringify(body)
-  });
+  const url = `https://gpt-gateway.lytobinh61.workers.dev/${endpoint}`;
+  const options = { method, headers: { "Content-Type": "application/json" } };
+  if (method !== "GET") options.body = JSON.stringify(body);
+  const res = await fetch(url, options);
   return await res.json();
 }
 
@@ -159,3 +159,4 @@ document.getElementById("btnRenewUser").onclick = async () => {
 
 // ===== Mặc định =====
 printResult("✨ Sẵn sàng. Nhập adminKey để bắt đầu thao tác.");
+
