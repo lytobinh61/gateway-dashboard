@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = "https://gpt-gateway.lytobinh61.workers.dev/jit";
   const output = document.getElementById("output");
 
+  // Các nút
   const btnAddGPT = document.getElementById("btnAddGPT");
   const btnDeleteGPT = document.getElementById("btnDeleteGPT");
   const btnAddUser = document.getElementById("btnAddUser");
@@ -11,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRenewUser = document.getElementById("btnRenewUser");
   const themeToggle = document.getElementById("themeToggle");
 
-  // ======= Hiển thị thông báo =======
+  // ======= Hàm log =======
   function log(msg, type = "info") {
     const color =
       type === "error" ? "danger" : type === "success" ? "success" : "secondary";
@@ -19,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
     output.innerHTML = msg;
   }
 
-  // ======= Gọi API chung =======
+  // ======= Gọi API =======
   async function callAPI(endpoint, data = {}) {
     try {
       const res = await fetch(`${API_BASE}/${endpoint}`, {
@@ -34,17 +35,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ======= Danh sách GPT =======
+  // ======= Lấy danh sách GPT =======
   async function getGPTList() {
-    const res = await callAPI("listProducts");
-    if (!res?.products) return [];
+    const res = await callAPI("listProducts", {});
+    if (!res || !res.products || !Array.isArray(res.products)) {
+      console.error("⚠️ Không lấy được danh sách GPT:", res);
+      return [];
+    }
     return res.products;
   }
 
-  // ======= Danh sách User theo GPT =======
+  // ======= Lấy danh sách user theo GPT =======
   async function getUserList(product) {
     const res = await callAPI("listUsers", { product });
-    if (!res?.users) return [];
+    if (!res || !res.users) {
+      console.error("⚠️ Không lấy được danh sách user:", res);
+      return [];
+    }
     return res.users.map((u) => u.user);
   }
 
@@ -56,7 +63,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const id = prompt("Nhập ID GPT (ví dụ: law-court):");
     const name = prompt("Nhập tên hiển thị:");
     const url = prompt("Nhập link GPT:");
-
     if (!id || !name || !url) return log("⚠️ Thiếu thông tin.", "error");
 
     const res = await callAPI("createOrUpdateProduct", {
@@ -75,10 +81,11 @@ document.addEventListener("DOMContentLoaded", () => {
   async function handleDeleteGPT() {
     const adminKey = prompt("🔑 Nhập adminKey:");
     const gpts = await getGPTList();
-    if (gpts.length === 0) return log("⚠️ Không có GPT nào.", "error");
+    if (gpts.length === 0)
+      return log("⚠️ Không có GPT nào trong hệ thống.", "error");
 
-    const names = gpts.map((g) => g.name + " (" + g.id + ")").join("\n");
-    const id = prompt("Nhập ID GPT cần xoá:\n\n" + names);
+    const list = gpts.map((g) => `${g.id} - ${g.name}`).join("\n");
+    const id = prompt("Nhập ID GPT cần xoá:\n\n" + list);
     if (!id) return;
 
     const res = await callAPI("deleteProduct", { adminKey, id });
@@ -95,15 +102,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (gpts.length === 0)
       return log("⚠️ Không có GPT nào để thêm user.", "error");
 
-    const names = gpts.map((g) => g.name + " (" + g.id + ")").join("\n");
-    const product = prompt("Chọn GPT cần thêm user:\n\n" + names);
-    if (!product) return log("⚠️ Bạn chưa chọn GPT.", "error");
+    // Hiển thị danh sách GPT để chọn
+    const list = gpts.map((g, i) => `${i + 1}. ${g.name} (${g.id})`).join("\n");
+    const idx = prompt("Chọn GPT (nhập số thứ tự):\n\n" + list);
+    const product = gpts[parseInt(idx) - 1]?.id;
+    if (!product) return log("⚠️ Bạn chưa chọn GPT hợp lệ.", "error");
 
     const user = prompt("Nhập tên user:");
     if (!user) return log("⚠️ Bạn chưa nhập user.", "error");
 
     const res = await callAPI("createUser", { adminKey, product, user });
-
     if (res?.success)
       log(`✅ Đã thêm user <b>${user}</b> vào GPT <b>${product}</b>.`, "success");
     else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
@@ -118,16 +126,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (gpts.length === 0)
       return log("⚠️ Không có GPT nào để xoá user.", "error");
 
-    const names = gpts.map((g) => g.name + " (" + g.id + ")").join("\n");
-    const product = prompt("Chọn GPT chứa user cần xoá:\n\n" + names);
-    if (!product) return log("⚠️ Bạn chưa chọn GPT.", "error");
+    // Chọn GPT
+    const list = gpts.map((g, i) => `${i + 1}. ${g.name} (${g.id})`).join("\n");
+    const idx = prompt("Chọn GPT chứa user cần xoá (nhập số thứ tự):\n\n" + list);
+    const product = gpts[parseInt(idx) - 1]?.id;
+    if (!product) return log("⚠️ Bạn chưa chọn GPT hợp lệ.", "error");
 
+    // Lấy user
     const users = await getUserList(product);
     if (users.length === 0)
       return log(`⚠️ GPT <b>${product}</b> chưa có user nào.`, "error");
 
-    const user = prompt("Chọn user cần xoá:\n\n" + users.join("\n"));
-    if (!user) return log("⚠️ Bạn chưa chọn user.", "error");
+    const ulist = users.map((u, i) => `${i + 1}. ${u}`).join("\n");
+    const uidx = prompt("Chọn user cần xoá (nhập số thứ tự):\n\n" + ulist);
+    const user = users[parseInt(uidx) - 1];
+    if (!user) return log("⚠️ Bạn chưa chọn user hợp lệ.", "error");
 
     if (!confirm(`Xác nhận xoá user "${user}" khỏi GPT "${product}"?`))
       return log("❎ Đã huỷ thao tác xoá.", "info");
@@ -159,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
   btnDeleteUser.onclick = handleDeleteUser;
   btnRenewUser.onclick = handleRenewUser;
 
-  // ======= SÁNG / TỐI =======
+  // ======= Nút sáng / tối =======
   themeToggle.onclick = () => {
     document.body.classList.toggle("dark-mode");
     const dark = document.body.classList.contains("dark-mode");
