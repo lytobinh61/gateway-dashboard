@@ -1,123 +1,79 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0d6efd">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>✨ Quản trị Gateway GPT</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="manifest" href="manifest.json">
-body.dark-mode {
-  background-color: #121212;
-  color: #f1f1f1;
-}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản trị Gateway GPT</title>
 
-body.dark-mode .btn {
-  filter: brightness(1.1);
-}
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
 
-body.dark-mode .alert {
-  background-color: #222;
-  color: #f1f1f1;
-  border-color: #444;
-}
+    <!-- ✅ CSS chế độ sáng/tối -->
+    <style>
+      * {
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
 
-<style>
-  body {
-    font-family: system-ui, sans-serif;
-    background-color: #f8f9fa;
-    text-align: center;
-    padding: 15px;
-  }
+      body.dark-mode {
+        background-color: #121212;
+        color: #f1f1f1;
+      }
 
-  h1, h2, h3 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
+      body.dark-mode .btn {
+        filter: brightness(1.1);
+      }
 
-  /* --- Các nút chính --- */
-  .btn {
-    font-size: 17px;
-    margin: 6px auto;
-    padding: 12px 20px;
-    width: 90%;
-    max-width: 280px;
-    display: inline-block;
-  }
+      body.dark-mode .alert {
+        background-color: #222;
+        color: #f1f1f1;
+        border-color: #444;
+      }
 
-  /* --- Vùng bảng --- */
-  .table-container {
-    width: 100%;
-    overflow-x: auto;
-    margin-top: 20px;
-  }
+      /* căn giữa nội dung */
+      .container {
+        max-width: 900px;
+        margin-top: 50px;
+        text-align: center;
+      }
 
-  table {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    border-collapse: collapse;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  }
+      #output {
+        margin-top: 20px;
+        min-height: 50px;
+        transition: all 0.3s ease;
+      }
 
-  th, td {
-    text-align: left;
-    padding: 10px;
-    white-space: nowrap;
-  }
+      #themeToggle {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
 
-  th {
-    background-color: #f1f1f1;
-    font-weight: 600;
-  }
+  <body>
+    <div class="container">
+      <h1>✨ Quản trị Gateway GPT</h1>
 
-  tr:nth-child(even) {
-    background-color: #fafafa;
-  }
+      <!-- Các nút chức năng -->
+      <div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
+        <button id="btnAddGPT" class="btn btn-success btn-lg">➕ Thêm GPT</button>
+        <button id="btnDeleteGPT" class="btn btn-danger btn-lg">🗑️ Xoá GPT</button>
+        <button id="btnAddUser" class="btn btn-primary btn-lg">➕ Thêm User</button>
+        <button id="btnDeleteUser" class="btn btn-warning btn-lg">🗑️ Xoá User</button>
+        <button id="btnRenewUser" class="btn btn-info btn-lg">🔄 Gia hạn User</button>
+      </div>
 
-  #output {
-    text-align: left;
-    margin: 20px auto;
-    max-width: 480px;
-  }
+      <!-- Hiển thị kết quả -->
+      <div id="output" class="alert alert-light border"></div>
 
-  /* --- Mobile --- */
-  @media (max-width: 768px) {
-    .btn {
-      width: 100%;
-      font-size: 16px;
-      padding: 10px;
-    }
-    table {
-      font-size: 14px;
-    }
-    th, td {
-      padding: 8px;
-    }
-  }
-</style>
-
-</head>
-<body>
-  <div class="container">
-    <h1>✨ Quản trị Gateway GPT</h1>
-    <div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
-      <button id="btnAddGPT" class="btn btn-success btn-lg">➕ Thêm GPT</button>
-      <button id="btnDeleteGPT" class="btn btn-danger btn-lg">🗑️ Xoá GPT</button>
-      <button id="btnAddUser" class="btn btn-primary btn-lg">➕ Thêm User</button>
-      <button id="btnDeleteUser" class="btn btn-warning btn-lg">🗑️ Xoá User</button>
-      <button id="btnRenewUser" class="btn btn-info btn-lg">🔄 Gia hạn User</button>
+      <!-- Nút chuyển chế độ -->
+      <button id="themeToggle" class="btn btn-outline-secondary btn-sm">
+        🌙 Chuyển sang chế độ tối
+      </button>
     </div>
 
-    <div id="output" class="alert alert-light border"></div>
-
-    <button id="themeToggle" class="btn btn-outline-secondary btn-sm">🌙 Chế độ tối / ☀️ Sáng</button>
-  </div>
-
-  <script src="script.js"></script>
-</body>
+    <!-- JS chính -->
+    <script src="script.js"></script>
+  </body>
 </html>
-
