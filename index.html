@@ -1,77 +1,95 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>✨ Quản trị Gateway GPT</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <style>
-    body {
-      background-color: #f9f9f9;
-      color: #212529;
-      transition: all 0.3s ease;
-    }
+// server.js
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const OpenAI = require("openai");
 
-    h1 {
-      text-align: center;
-      margin-top: 20px;
-      margin-bottom: 30px;
-      font-weight: 700;
-    }
+const app = express();
+const PORT = 3000;
 
-    .btn-lg {
-      min-width: 180px;
-    }
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-    .alert {
-      text-align: center;
-      font-size: 1.1rem;
-    }
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
-    /* 🌙 Chế độ tối */
-    body.dark-mode {
-      background-color: #121212;
-      color: #f1f1f1;
-    }
+app.post("/api/chat", async (req, res) => {
+  const { message, mode } = req.body;
 
-    body.dark-mode .btn {
-      filter: brightness(1.1);
-    }
+  if (!message || !message.trim()) {
+    return res.status(400).json({ error: "Nội dung câu hỏi trống" });
+  }
 
-    body.dark-mode .alert {
-      background-color: #222;
-      color: #f1f1f1;
-      border-color: #444;
-    }
+  // Xác định lời nhắc (system prompt) theo 3 chức năng
+  let systemPrompt = "";
 
-    #output {
-      min-height: 60px;
-    }
-  </style>
-</head>
+  switch (mode) {
+    case "xu-ly-don":
+      systemPrompt =
+        "Bạn là Trợ lý pháp lý của Phòng Tổ chức – Sở GD&ĐT. " +
+        "Chức năng hiện tại: XỬ LÝ ĐƠN TỪ, VỤ VIỆC. " +
+        "Hãy: (1) yêu cầu bổ sung thông tin nếu chưa rõ; (2) xác định loại vụ việc " +
+        "(nâng lương, nghỉ chế độ, tuyển dụng, bổ nhiệm, kỷ luật, thôi việc, v.v.); " +
+        "(3) phân tích căn cứ pháp lý: điều kiện, hồ sơ, thẩm quyền, thời hạn; " +
+        "(4) đề xuất phương án xử lý; (5) nếu phù hợp thì soạn dự thảo văn bản " +
+        "(Quyết định, Công văn, Tờ trình…) ở mức tóm tắt; (6) cuối cùng trích dẫn " +
+        "các văn bản pháp lý chính (Số hiệu – Ngày – Cơ quan ban hành). " +
+        "Trả lời ngắn gọn, rõ ý, văn phong hành chính.";
+      break;
 
-<body>
-  <div class="container text-center">
-    <h1>✨ Quản trị Gateway GPT</h1>
+    case "tra-cuu":
+      systemPrompt =
+        "Bạn là Trợ lý pháp lý của Phòng Tổ chức – Sở GD&ĐT. " +
+        "Chức năng hiện tại: TRA CỨU VĂN BẢN PHÁP LUẬT. " +
+        "Người dùng nêu một chủ đề (ví dụ: phụ cấp ưu đãi, nghỉ hưu, nâng lương…). " +
+        "Bạn hãy liệt kê các văn bản quy phạm pháp luật hiện hành liên quan " +
+        "theo thứ tự hiệu lực (Luật, Nghị định, Thông tư, Văn bản hướng dẫn), " +
+        "nêu rõ: Số hiệu – Ngày – Cơ quan ban hành – Tình trạng hiệu lực – " +
+        "nội dung chính tóm tắt. Trả lời ngắn gọn, dễ hiểu, văn phong hành chính.";
+      break;
 
-    <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
-      <button id="btnAddGPT" class="btn btn-success btn-lg">➕ Thêm GPT</button>
-      <button id="btnDeleteGPT" class="btn btn-danger btn-lg">🗑️ Xoá GPT</button>
-      <button id="btnAddUser" class="btn btn-primary btn-lg">➕ Thêm User</button>
-      <button id="btnDeleteUser" class="btn btn-warning btn-lg">🗑️ Xoá User</button>
-      <button id="btnRenewUser" class="btn btn-info btn-lg">🔄 Gia hạn User</button>
-    </div>
+    case "soan-van-ban":
+      systemPrompt =
+        "Bạn là Trợ lý pháp lý của Phòng Tổ chức – Sở GD&ĐT. " +
+        "Chức năng hiện tại: SOẠN THẢO VĂN BẢN MẪU. " +
+        "Người dùng yêu cầu soạn Quyết định, Công văn, Tờ trình… " +
+        "Bạn hãy soạn thảo văn bản hành chính theo thể thức chuẩn Việt Nam, " +
+        "gồm: Quốc hiệu – Tiêu ngữ; Tên cơ quan; Số, ký hiệu (để dạng [Số.../QĐ-SGDĐT]); " +
+        "Địa danh, ngày tháng; Căn cứ pháp lý (liệt kê một số văn bản chính); " +
+        "Nội dung điều khoản; Nơi nhận; Chức vụ, họ tên người ký (để trong [ ] nếu chưa biết). " +
+        "Dùng [ngoặc vuông] cho chỗ cần điền thông tin. Trả lời bằng tiếng Việt, " +
+        "có thể copy trực tiếp sang Word.";
+      break;
 
-    <div id="output" class="alert alert-light border">Chưa có thao tác...</div>
+    default:
+      systemPrompt =
+        "Bạn là Trợ lý pháp lý của Phòng Tổ chức – Sở GD&ĐT, hỗ trợ chung về pháp luật, " +
+        "chế độ, chính sách, và soạn thảo văn bản. Trả lời bằng tiếng Việt, " +
+        "văn phong hành chính, rõ ràng, ngắn gọn.";
+  }
 
-    <button id="themeToggle" class="btn btn-outline-secondary mt-3">
-      🌙 Chuyển sang chế độ tối
-    </button>
-  </div>
+  try {
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message },
+      ],
+    });
 
-  <script src="script.js" defer></script>
-</body>
-</html>
+    const answer = completion.choices[0].message.content;
+    res.json({ answer });
+  } catch (error) {
+    console.error("Lỗi gọi OpenAI:", error);
+    res.status(500).json({
+      error: "Có lỗi khi gọi OpenAI. Kiểm tra lại API key hoặc kết nối mạng.",
+    });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Trợ lý pháp lý đang chạy tại http://localhost:${PORT}`);
+});
