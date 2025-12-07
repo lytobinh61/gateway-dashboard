@@ -118,3 +118,20 @@ document.getElementById("btnRenewUser").onclick = () => {
 
 /* =================== MẶC ĐỊNH =================== */
 printResult("✨ Nhập adminKey để bắt đầu thao tác.");
+//----------------------------------------------------------
+// ✅ Hàm gọi API thật (nếu bạn muốn dùng API thật)
+//----------------------------------------------------------
+async function callApi(endpoint, method, body) {
+  const url = `https://gpt-gateway.lytobinh61.workers.dev/${endpoint}`;
+  const options = {
+    method,
+    headers: { "Content-Type": "application/json" }
+  };
+  if (method !== "GET") {
+    options.body = JSON.stringify(body);
+  }
+  const res = await fetch(url, options);
+  return await res.json();
+}
+
+
