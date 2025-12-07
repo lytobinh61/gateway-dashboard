@@ -1,225 +1,121 @@
-// script.js — Bản hoàn chỉnh (có chọn GPT và User trực quan)
+// =======================
+// Cấu hình chung
+// =======================
+const API_BASE = "https://gpt-gateway.lytobinh61.workers.dev/jit";
+const ADMIN_KEY = prompt("🔑 Nhập mã quản trị (adminKey):");
 
 // =======================
-// ⚙️ Cấu hình
+// Phần tử HTML
 // =======================
-const API = "https://gpt-gateway.lytobinh61.workers.dev";
-let adminKey = localStorage.getItem("adminKey") || "";
 const output = document.getElementById("output");
-const themeBtn = document.getElementById("themeToggle");
+const btnAddGPT = document.getElementById("btnAddGPT");
+const btnDeleteGPT = document.getElementById("btnDeleteGPT");
+const btnAddUser = document.getElementById("btnAddUser");
+const btnDeleteUser = document.getElementById("btnDeleteUser");
+const btnRenewUser = document.getElementById("btnRenewUser");
 
 // =======================
-// ⚙️ Tiện ích chung
+// Hàm tiện ích
 // =======================
-function log(msg, type = "light") {
-  output.className = `alert alert-${type} border mt-3`;
+function log(msg, type = "info") {
+  const color = type === "error" ? "danger" : type === "success" ? "success" : "secondary";
+  output.className = `alert alert-${color}`;
   output.innerHTML = msg;
 }
 
-function promptKey() {
-  adminKey = prompt("🔑 Nhập adminKey để xác thực:");
-  if (adminKey) localStorage.setItem("adminKey", adminKey);
-  return !!adminKey;
-}
-
-async function fetchJSON(url, method = "GET", body = null) {
-  const options = { method, headers: { "Content-Type": "application/json" } };
-  if (body) options.body = JSON.stringify(body);
-  const res = await fetch(url, options);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || data.error || "Lỗi không xác định.");
-  return data;
-}
-
 // =======================
-// 📦 Hiển thị danh sách GPT
+// Gọi API
 // =======================
-async function listGPTs(show = false) {
+async function callAPI(endpoint, data = {}) {
   try {
-    const data = await fetchJSON(`${API}/products`);
-    if (show) {
-      let html = `<h5>📦 Danh sách GPT:</h5><ul>`;
-      data.products.forEach((p) => {
-        html += `<li><b>${p.name}</b> (${p.id})<br><small>${p.gptUrl}</small></li>`;
-      });
-      html += "</ul>";
-      log(html, "success");
-    }
-    return data.products || [];
-  } catch (e) {
-    log(`❌ ${e.message}`, "danger");
-    return [];
+    const res = await fetch(`${API_BASE}/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  } catch (err) {
+    log("❌ Lỗi kết nối API: " + err.message, "error");
+    return null;
   }
 }
 
 // =======================
-// 🧩 Hiển thị danh sách user của GPT
+// 1️⃣ Thêm GPT
 // =======================
-async function listUsers(product) {
-  try {
-    const data = await fetchJSON(`${API}/users?product=${encodeURIComponent(product)}`);
-    const users = data.users || [];
-    return users.map(u => u.user);
-  } catch {
-    return [];
-  }
-}
+btnAddGPT.onclick = async () => {
+  const id = prompt("Nhập ID GPT (viết liền không dấu):");
+  const name = prompt("Nhập tên hiển thị của GPT:");
+  const url = prompt("Nhập link GPT (https://...):");
+  if (!id || !name || !url) return log("⚠️ Thiếu thông tin cần thiết.", "error");
+
+  const res = await callAPI("createOrUpdateProduct", {
+    adminKey: ADMIN_KEY,
+    id,
+    name,
+    gptUrl: url,
+  });
+  if (res?.success) log(`✅ Đã thêm GPT <b>${name}</b> (${id}) thành công!`, "success");
+  else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
+};
 
 // =======================
-// ➕ Thêm GPT
+// 2️⃣ Xoá GPT
 // =======================
-async function addGPT() {
-  if (!adminKey && !promptKey()) return;
-  const id = prompt("Nhập ID GPT (chữ thường, số, gạch ngang):");
+btnDeleteGPT.onclick = async () => {
+  const id = prompt("Nhập ID GPT cần xoá:");
   if (!id) return;
-  const name = prompt("Tên hiển thị của GPT:");
-  const gptUrl = prompt("URL GPT (https://...):");
-  if (!gptUrl.startsWith("https")) return alert("❌ URL không hợp lệ.");
-  const gateway = prompt("Gateway tùy chọn (Enter để bỏ trống):") || "";
-
-  try {
-    await fetchJSON(`${API}/product`, "POST", { adminKey, id, name, gptUrl, gateway });
-    log(`✅ Đã thêm GPT <b>${name}</b> thành công.`, "success");
-    await listGPTs(true);
-  } catch (e) {
-    log(`❌ ${e.message}`, "danger");
-  }
-}
+  const res = await callAPI("deleteProduct", { adminKey: ADMIN_KEY, id });
+  if (res?.success) log(`🗑️ Đã xoá GPT <b>${id}</b>.`, "success");
+  else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
+};
 
 // =======================
-// 🗑️ Xoá GPT
+// 3️⃣ Thêm User
 // =======================
-async function deleteGPT() {
-  if (!adminKey && !promptKey()) return;
-  const list = await listGPTs();
-  if (!list.length) return alert("⚠️ Không có GPT nào.");
+btnAddUser.onclick = async () => {
+  const product = prompt("Nhập tên GPT cần thêm user:");
+  const user = prompt("Nhập tên user:");
+  const activationCode = prompt("Nhập mã kích hoạt ban đầu (nếu có):");
 
-  const options = list.map(p => `${p.name} (${p.id})`).join("\n");
-  const id = prompt(`Chọn GPT để xoá:\n${options}\n\n👉 Nhập ID GPT:`);
-  if (!id) return;
-  if (!confirm(`Xoá GPT "${id}"?`)) return;
+  if (!product || !user) return log("⚠️ Thiếu thông tin.", "error");
 
-  try {
-    await fetchJSON(`${API}/product`, "DELETE", { adminKey, id });
-    log(`🗑️ Đã xoá GPT <b>${id}</b>.`, "warning");
-    await listGPTs(true);
-  } catch (e) {
-    log(`❌ ${e.message}`, "danger");
-  }
-}
+  const res = await callAPI("createUser", {
+    adminKey: ADMIN_KEY,
+    product,
+    user,
+    activationCode,
+  });
+  if (res?.success) log(`✅ Đã thêm user <b>${user}</b> vào GPT <b>${product}</b>.`, "success");
+  else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
+};
 
 // =======================
-// ➕ Thêm User
+// 4️⃣ Xoá User
 // =======================
-async function addUser() {
-  if (!adminKey && !promptKey()) return;
-  const gpts = await listGPTs();
-  if (!gpts.length) return alert("⚠️ Không có GPT nào.");
+btnDeleteUser.onclick = async () => {
+  const product = prompt("Nhập tên GPT chứa user:");
+  const user = prompt("Nhập tên user cần xoá:");
+  if (!product || !user) return;
 
-  const gptList = gpts.map(p => `${p.name} (${p.id})`).join("\n");
-  const product = prompt(`Chọn GPT để thêm user:\n${gptList}\n\n👉 Nhập ID GPT:`);
-
-  if (!product) return;
-  const user = prompt("Tên user cần thêm:");
-  if (!user) return;
-  const activationCode = prompt("Mã kích hoạt (Enter nếu để trống):") || "";
-
-  try {
-    await fetchJSON(`${API}/user`, "POST", { adminKey, product, user, activationCode });
-    log(`✅ Đã thêm user <b>${user}</b> vào GPT <b>${product}</b>.`, "success");
-  } catch (e) {
-    log(`❌ ${e.message}`, "danger");
-  }
-}
+  const res = await callAPI("deleteUser", { adminKey: ADMIN_KEY, product, user });
+  if (res?.success) log(`🗑️ Đã xoá user <b>${user}</b> khỏi GPT <b>${product}</b>.`, "success");
+  else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
+};
 
 // =======================
-// 🗑️ Xoá User
+// 5️⃣ Gia hạn user
 // =======================
-async function deleteUser() {
-  if (!adminKey && !promptKey()) return;
-  const gpts = await listGPTs();
-  if (!gpts.length) return alert("⚠️ Không có GPT nào.");
-
-  const gptList = gpts.map(p => `${p.name} (${p.id})`).join("\n");
-  const product = prompt(`Chọn GPT chứa user cần xoá:\n${gptList}\n\n👉 Nhập ID GPT:`);
-
-  if (!product) return;
-  const users = await listUsers(product);
-  if (!users.length) return alert(`⚠️ Không tìm thấy user nào trong GPT "${product}".`);
-
-  const userList = users.join("\n");
-  const user = prompt(`Chọn user cần xoá trong GPT "${product}":\n${userList}\n\n👉 Nhập tên user:`);
+btnRenewUser.onclick = async () => {
+  const product = prompt("Nhập tên GPT:");
+  const user = prompt("Nhập tên user cần gia hạn:");
   if (!user) return;
 
-  if (!confirm(`Xác nhận xoá user "${user}" khỏi GPT "${product}"?`)) return;
-
-  try {
-    await fetchJSON(`${API}/user`, "DELETE", { adminKey, product, user });
-    log(`🗑️ Đã xoá user <b>${user}</b> khỏi GPT <b>${product}</b>.`, "warning");
-  } catch (e) {
-    log(`❌ ${e.message}`, "danger");
-  }
-}
-
-// =======================
-// 🔁 Gia hạn User
-// =======================
-async function renewUser() {
-  if (!adminKey && !promptKey()) return;
-  const gpts = await listGPTs();
-  if (!gpts.length) return alert("⚠️ Không có GPT nào.");
-
-  const gptList = gpts.map(p => `${p.name} (${p.id})`).join("\n");
-  const product = prompt(`Chọn GPT cần gia hạn user:\n${gptList}\n\n👉 Nhập ID GPT:`);
-
-  if (!product) return;
-  const users = await listUsers(product);
-  if (!users.length) return alert(`⚠️ Không tìm thấy user nào trong GPT "${product}".`);
-
-  const userList = users.join("\n");
-  const user = prompt(`Chọn user cần gia hạn:\n${userList}\n\n👉 Nhập tên user:`);
-
-  try {
-    const res = await fetchJSON(`${API}/renew`, "POST", { adminKey, product, user });
+  const res = await callAPI("renewActivationCode", { product, user });
+  if (res?.success)
     log(
-      `✅ Đã gia hạn cho <b>${user}</b> trong GPT <b>${product}</b> (${res.trialDays || 0} ngày, ${res.slots || 0} thiết bị).`,
+      `🔄 Đã cấp mã mới cho <b>${user}</b> trong GPT <b>${res.product}</b>:<br><code>${res.code}</code>`,
       "success"
     );
-  } catch (e) {
-    log(`❌ ${e.message}`, "danger");
-  }
-}
-
-// =======================
-// 🌗 Giao diện tối / sáng
-// =======================
-function updateThemeButton(isDark) {
-  themeBtn.innerHTML = isDark ? "☀️ Chuyển sang chế độ sáng" : "🌙 Chuyển sang chế độ tối";
-}
-function applyTheme(isDark) {
-  document.body.classList.toggle("dark-mode", isDark);
-  localStorage.setItem("theme", isDark ? "dark" : "light");
-  updateThemeButton(isDark);
-}
-themeBtn.addEventListener("click", () => {
-  const isDark = !document.body.classList.contains("dark-mode");
-  applyTheme(isDark);
-});
-
-// =======================
-// 🎯 Gán sự kiện các nút
-// =======================
-document.getElementById("btnAddGPT").onclick = addGPT;
-document.getElementById("btnDeleteGPT").onclick = deleteGPT;
-document.getElementById("btnAddUser").onclick = addUser;
-document.getElementById("btnDeleteUser").onclick = deleteUser;
-document.getElementById("btnRenewUser").onclick = renewUser;
-
-// =======================
-// 🚀 Khởi động
-// =======================
-window.onload = () => {
-  const savedTheme = localStorage.getItem("theme") === "dark";
-  applyTheme(savedTheme);
-  listGPTs(true);
+  else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
 };
