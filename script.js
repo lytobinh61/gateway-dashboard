@@ -1,4 +1,3 @@
-// Chạy sau khi DOM load xong
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script.js khởi động thành công");
 
@@ -20,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     output.innerHTML = msg;
   }
 
-  // ======= Gọi API (chung) =======
+  // ======= Gọi API chung =======
   async function callAPI(endpoint, data = {}) {
     try {
       const res = await fetch(`${API_BASE}/${endpoint}`, {
@@ -35,12 +34,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ======= Các thao tác quản trị =======
+  // ======= Danh sách GPT =======
+  async function getGPTList() {
+    const res = await callAPI("listProducts");
+    if (!res?.products) return [];
+    return res.products;
+  }
+
+  // ======= Danh sách User theo GPT =======
+  async function getUserList(product) {
+    const res = await callAPI("listUsers", { product });
+    if (!res?.users) return [];
+    return res.users.map((u) => u.user);
+  }
+
+  // ======= THÊM GPT =======
   async function handleAddGPT() {
     const adminKey = prompt("🔑 Nhập adminKey:");
     if (!adminKey) return log("⚠️ Bạn chưa nhập adminKey.", "error");
 
-    const id = prompt("Nhập ID GPT:");
+    const id = prompt("Nhập ID GPT (ví dụ: law-court):");
     const name = prompt("Nhập tên hiển thị:");
     const url = prompt("Nhập link GPT:");
 
@@ -58,40 +71,66 @@ document.addEventListener("DOMContentLoaded", () => {
     else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
   }
 
+  // ======= XOÁ GPT =======
   async function handleDeleteGPT() {
     const adminKey = prompt("🔑 Nhập adminKey:");
-    const id = prompt("Nhập ID GPT cần xoá:");
-    if (!adminKey || !id) return log("⚠️ Thiếu thông tin.", "error");
+    const gpts = await getGPTList();
+    if (gpts.length === 0) return log("⚠️ Không có GPT nào.", "error");
+
+    const names = gpts.map((g) => g.name + " (" + g.id + ")").join("\n");
+    const id = prompt("Nhập ID GPT cần xoá:\n\n" + names);
+    if (!id) return;
 
     const res = await callAPI("deleteProduct", { adminKey, id });
     if (res?.success) log(`🗑️ Đã xoá GPT <b>${id}</b>.`, "success");
     else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
   }
 
+  // ======= THÊM USER =======
   async function handleAddUser() {
     const adminKey = prompt("🔑 Nhập adminKey:");
-    const product = prompt("Nhập tên GPT:");
-    const user = prompt("Nhập tên user:");
-    if (!adminKey || !product || !user)
-      return log("⚠️ Thiếu thông tin.", "error");
+    if (!adminKey) return log("⚠️ Bạn chưa nhập adminKey.", "error");
 
-    const res = await callAPI("createUser", {
-      adminKey,
-      product,
-      user,
-    });
+    const gpts = await getGPTList();
+    if (gpts.length === 0)
+      return log("⚠️ Không có GPT nào để thêm user.", "error");
+
+    const names = gpts.map((g) => g.name + " (" + g.id + ")").join("\n");
+    const product = prompt("Chọn GPT cần thêm user:\n\n" + names);
+    if (!product) return log("⚠️ Bạn chưa chọn GPT.", "error");
+
+    const user = prompt("Nhập tên user:");
+    if (!user) return log("⚠️ Bạn chưa nhập user.", "error");
+
+    const res = await callAPI("createUser", { adminKey, product, user });
 
     if (res?.success)
       log(`✅ Đã thêm user <b>${user}</b> vào GPT <b>${product}</b>.`, "success");
     else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
   }
 
+  // ======= XOÁ USER =======
   async function handleDeleteUser() {
     const adminKey = prompt("🔑 Nhập adminKey:");
-    const product = prompt("Nhập tên GPT chứa user:");
-    const user = prompt("Nhập user cần xoá:");
-    if (!adminKey || !product || !user)
-      return log("⚠️ Thiếu thông tin.", "error");
+    if (!adminKey) return log("⚠️ Bạn chưa nhập adminKey.", "error");
+
+    const gpts = await getGPTList();
+    if (gpts.length === 0)
+      return log("⚠️ Không có GPT nào để xoá user.", "error");
+
+    const names = gpts.map((g) => g.name + " (" + g.id + ")").join("\n");
+    const product = prompt("Chọn GPT chứa user cần xoá:\n\n" + names);
+    if (!product) return log("⚠️ Bạn chưa chọn GPT.", "error");
+
+    const users = await getUserList(product);
+    if (users.length === 0)
+      return log(`⚠️ GPT <b>${product}</b> chưa có user nào.`, "error");
+
+    const user = prompt("Chọn user cần xoá:\n\n" + users.join("\n"));
+    if (!user) return log("⚠️ Bạn chưa chọn user.", "error");
+
+    if (!confirm(`Xác nhận xoá user "${user}" khỏi GPT "${product}"?`))
+      return log("❎ Đã huỷ thao tác xoá.", "info");
 
     const res = await callAPI("deleteUser", { adminKey, product, user });
     if (res?.success)
@@ -99,6 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
   }
 
+  // ======= GIA HẠN USER =======
   async function handleRenewUser() {
     const user = prompt("Nhập user cần gia hạn:");
     if (!user) return log("⚠️ Bạn chưa nhập user.", "error");
@@ -112,18 +152,20 @@ document.addEventListener("DOMContentLoaded", () => {
     else log(`❌ Lỗi: ${res?.message || "Không xác định"}`, "error");
   }
 
-  // ======= Gắn sự kiện nút =======
+  // ======= GẮN SỰ KIỆN =======
   btnAddGPT.onclick = handleAddGPT;
   btnDeleteGPT.onclick = handleDeleteGPT;
   btnAddUser.onclick = handleAddUser;
   btnDeleteUser.onclick = handleDeleteUser;
   btnRenewUser.onclick = handleRenewUser;
 
-  // ======= Chuyển chế độ sáng / tối =======
+  // ======= SÁNG / TỐI =======
   themeToggle.onclick = () => {
     document.body.classList.toggle("dark-mode");
     const dark = document.body.classList.contains("dark-mode");
-    themeToggle.textContent = dark ? "☀️ Chuyển sang chế độ sáng" : "🌙 Chuyển sang chế độ tối";
+    themeToggle.textContent = dark
+      ? "☀️ Chuyển sang chế độ sáng"
+      : "🌙 Chuyển sang chế độ tối";
     log(`Đã chuyển sang chế độ ${dark ? "🌙 tối" : "☀️ sáng"}`, "info");
   };
 });
