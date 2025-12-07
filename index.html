@@ -1,18 +1,40 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>✨ Quản trị Gateway GPT</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d6efd">
+  <title>Quản trị Gateway GPT</title>
+  <link rel="manifest" href="manifest.json">
+
   <style>
-    body { background: var(--bs-body-bg); color: var(--bs-body-color); text-align: center; padding: 40px; transition: background 0.3s; }
-    h1 { font-size: 2.3rem; margin-bottom: 30px; }
-    table { margin-top: 20px; }
-    .btn-lg { min-width: 150px; }
-    #themeToggle { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: #f8f9fa;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .btn {
+      font-size: 18px;
+      margin: 8px;
+      padding: 12px 24px;
+      width: 90%;
+      max-width: 300px;
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+    }
+
+    #output {
+      text-align: left;
+      margin: 20px auto;
+      max-width: 480px;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>✨ Quản trị Gateway GPT</h1>
@@ -32,3 +54,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
