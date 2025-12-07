@@ -234,6 +234,7 @@ document.getElementById("btnDeleteUser").onclick = deleteUser;
 document.getElementById("btnRenewUser").onclick = renewUser;
 
 // ====== AUTO LOAD ======
-loadProducts();
+//loadProducts();
+
 
 
