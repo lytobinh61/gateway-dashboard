@@ -133,5 +133,17 @@ async function callApi(endpoint, method, body) {
   const res = await fetch(url, options);
   return await res.json();
 }
+// --- kiểm tra danh sách GPT thật ---
+(async () => {
+  const res = await fetch("https://gpt-gateway.lytobinh61.workers.dev/products");
+  const data = await res.json();
+  console.log("Kết quả từ API:", data);
+  alert(
+    data.products
+      .map(p => `${p.id} — ${p.name}`)
+      .join("\n")
+  );
+})();
+
 
 
